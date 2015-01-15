@@ -54,22 +54,23 @@ namespace WhiteGirlEbooks.Controllers
 				Startup.Configuration.Get("Data:TwitterAccessTokenSecret"));
 
 			// Get Metadata
-			var metadata = _metadataRepository.GetById(Metadata.MetadataId);
-			var random = new Random();
-			var tweetIds = new string[5];
-			for (var i = 0; i < tweetIds.Length; i++)
-				tweetIds[i] = metadata.TweetIds[random.Next(0, metadata.TweetIds.Count - 1)];
-			var tweet = string.Join(" ", tweetIds.Select(i => _tweetRepository.GetById(i).Content));
+			//var metadata = _metadataRepository.GetById(Metadata.MetadataId);
+			//var random = new Random();
+			//var tweetIds = new string[5];
+			//for (var i = 0; i < tweetIds.Length; i++)
+			//	tweetIds[i] = metadata.TweetIds[random.Next(0, metadata.TweetIds.Count - 1)];
+			//var tweet = string.Join(" ", tweetIds.Select(i => _tweetRepository.GetById(i).Content));
 
-			var mc = new MarkovChain();
-			mc.Load(tweet);
-			while (true)
-			{
-				tweet = mc.Output();
+			//var mc = new MarkovChain();
+			//mc.Load(tweet);
+			//while (true)
+			//{
+			//	tweet = mc.Output();
 
-				if (tweet.Length < 100)
-					break;
-			}
+			//	if (tweet.Length < 100)
+			//		break;
+			//}
+			var tweet = "test";
 
 			service.SendTweet(new SendTweetOptions
 			{
