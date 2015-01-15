@@ -1,0 +1,16 @@
+﻿{
+	"Data": {
+		"AzureSecret": "example-secret",
+
+		// Azure DocumentDb stuff
+		"DdbDatabaseId": "insert-here",
+		"DdbDatabaseAccessKey": "insert-here",
+		"DdbDatabaseEndpointUri": "insert-here",
+
+		// Twitter stuff b
+		"TwitterConsumer": "insert-here",
+		"TwitterConsumerSecret": "insert-here",
+		"TwitterAccessToken": "insert-here",
+		"TwitterAccessTokenSecret": "insert-here"
+	}
+}
