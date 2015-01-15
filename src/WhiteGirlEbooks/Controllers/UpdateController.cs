@@ -2,9 +2,9 @@
 using System.Net;
 using System.Linq;
 using System.Web.Http;
-using TweetSharp;
 using WhiteGirlEbooks.Models.DocumentDb;
 using WhiteGirlEbooks.Models.Repositories;
+using LinqToTwitter;
 
 namespace WhiteGirlEbooks.Controllers
 {
@@ -43,33 +43,36 @@ namespace WhiteGirlEbooks.Controllers
 			if (id != Startup.Configuration.Get("Data:AzureSecret"))
 				return Content(HttpStatusCode.Forbidden, new { error = "fuck off", success = false });
 
-			var service = new TwitterService(
-				Startup.Configuration.Get("Data:TwitterConsumer"),
-				Startup.Configuration.Get("Data:TwitterConsumerSecret"));
-
-			service.AuthenticateWith(
-				Startup.Configuration.Get("Data:TwitterAccessToken"),
-				Startup.Configuration.Get("Data:TwitterAccessTokenSecret"));
+			var twitterContext = new TwitterContext(new SingleUserAuthorizer
+			{
+				CredentialStore = new SingleUserInMemoryCredentialStore
+				{
+					ConsumerKey = Startup.Configuration.Get("Data:TwitterConsumer"),
+					ConsumerSecret = Startup.Configuration.Get("Data:TwitterConsumerSecret"),
+					AccessToken = Startup.Configuration.Get("Data:TwitterAccessToken"),
+					AccessTokenSecret = Startup.Configuration.Get("Data:TwitterAccessTokenSecret")
+				}
+			});
 
 			// Get Metadata
 			var metadata = _metadataRepository.GetById(Metadata.MetadataId) ??
 				new Metadata();
 
 			var sinceId = metadata.LastId ?? "554836798879580160";
-			var tweets = service.ListTweetsOnUserTimeline(new ListTweetsOnUserTimelineOptions
-			{
-				ScreenName = "nymaddie",
-				ExcludeReplies = true,
-				Count = 200,
-				IncludeRts = false,
-				SinceId = long.Parse(sinceId),
-			});
+			var tweets = (from tweet in twitterContext.Status
+						   where tweet.Type == StatusType.User &&
+								 tweet.ScreenName == "nymaddie" &&
+								 tweet.Count == 200 &&
+								 tweet.ExcludeReplies == true &&
+								 tweet.IncludeRetweets == false &&
+								 tweet.SinceID == ulong.Parse(sinceId)
+						   select tweet).ToList();
 
 			if (!tweets.Any())
 				return Content(HttpStatusCode.OK, new { success = true });
 
-			var tweetsToAdd = tweets.Select(t => new Tweet(t.IdStr) { Content = t.Text, PostedAt = t.CreatedDate });
-			var newIds = tweets.Select(t => t.IdStr);
+			var tweetsToAdd = tweets.Select(t => new Tweet(t.ID.ToString()) { Content = t.Text, PostedAt = t.CreatedAt });
+			var newIds = tweets.Select(t => t.ID.ToString());
 			var lastId = tweetsToAdd.First().Id;
 
 			// Add to db
